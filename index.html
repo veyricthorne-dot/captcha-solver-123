@@ -1,0 +1,93 @@
+html
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Captcha Solver</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 2em;
+    background-color: #f9f9f9;
+  }
+  h1 {
+    text-align: center;
+  }
+  #container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  #image-container {
+    text-align: center;
+    margin-bottom: 1em;
+  }
+  #captcha-img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ccc;
+  }
+  #result {
+    margin-top: 1em;
+    font-size: 1.2em;
+    color: #333;
+  }
+  button {
+    padding: 0.7em 1.2em;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 1em;
+  }
+</style>
+</head>
+<body>
+<h1>Captcha Solver</h1>
+<div id="container">
+  <div id="image-container">
+    <img id="captcha-img" src="sample.png" alt="Captcha Image" />
+  </div>
+  <button id="solve-btn">Solve Captcha</button>
+  <div id="result"></div>
+</div>
+
+<script>
+  document.getElementById('solve-btn').addEventListener('click', async () => {
+    const img = document.getElementById('captcha-img');
+    const resultDiv = document.getElementById('result');
+    resultDiv.textContent = 'Processing...';
+
+    // Convert image to base64
+    const base64Image = await getBase64(img);
+    // Send to OCR API (using Tesseract.js)
+    try {
+      resultDiv.textContent = 'Recognizing...';
+      const { data: { text } } = await Tesseract.recognize(
+        base64Image,
+        'eng',
+        { logger: m => console.log(m) }
+      );
+      // Clean up text
+      const cleaned = text.trim().replace(/\s+/g, '');
+      resultDiv.innerHTML = `Recognized Text: <strong>${cleaned}</strong>`;
+    } catch (err) {
+      resultDiv.textContent = 'Error recognizing captcha.';
+      console.error(err);
+    }
+  });
+
+  function getBase64(img) {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    });
+  }
+</script>
+<!-- Include Tesseract.js -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
+</body>
+</html>
